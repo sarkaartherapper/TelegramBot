@@ -52,6 +52,29 @@ if __name__ == "__main__":
         webhook_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/{TELEGRAM_TOKEN}"
         print(f"Setting webhook to: {webhook_url}")
         tg_app.bot.set_webhook(url=webhook_url)
+
+        # 👇 ye line alag honi chahiye, same line me 'except' nahi
+        app.run(host="0.0.0.0", port=port)
+
+    except Exception as e:
+        print("Error while starting the app:", e)# --- Webhook Route ---
+@app.route(f"/{TELEGRAM_TOKEN}", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), tg_app.bot)
+    asyncio.run(tg_app.process_update(update))
+    return "OK", 200
+
+@app.route("/")
+def home():
+    return "Gemini Telegram Bot is Alive!"
+
+# --- Start server ---
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    try:
+        webhook_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/{TELEGRAM_TOKEN}"
+        print(f"Setting webhook to: {webhook_url}")
+        tg_app.bot.set_webhook(url=webhook_url)
         app.run(host="0.0.0.0", port=port)
     except Exception as e:
         print("Error while starting the app:", e)# --- Webhook Route ---
