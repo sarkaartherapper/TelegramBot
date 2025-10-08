@@ -56,6 +56,8 @@ if __name__ == "__main__":
         # 👇 ye line alag honi chahiye, same line me 'except' nahi
         app.run(host="0.0.0.0", port=port)
 
+    #new
+
     except Exception as e:
         print("Error while starting the app:", e)# --- Webhook Route ---
 @app.route(f"/{TELEGRAM_TOKEN}", methods=["POST"])
