@@ -13,13 +13,13 @@ GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
-# --- Flask app (for webhook) ---
+# --- Flask app ---
 app = Flask(__name__)
 
 # --- Telegram App setup ---
 tg_app = Application.builder().token(TELEGRAM_TOKEN).build()
 
-# --- Commands ---
+# --- Telegram Handlers ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hi! I'm your Gemini AI bot. Type anything to chat.")
 
@@ -35,6 +35,29 @@ tg_app.add_handler(CommandHandler("start", start))
 tg_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
 # --- Webhook Route ---
+@app.route(f"/{TELEGRAM_TOKEN}", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), tg_app.bot)
+    asyncio.run(tg_app.process_update(update))
+    return "OK", 200
+
+@app.route("/")
+def home():
+    return "Gemini Telegram Bot is Alive!"
+
+# --- Start Server ---
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    try:
+        webhook_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/{TELEGRAM_TOKEN}"
+        print(f"Setting webhook to: {webhook_url}")
+        tg_app.bot.set_webhook(url=webhook_url)
+
+        # app.run is inside try block, except on next line
+        app.run(host="0.0.0.0", port=port)
+
+    except Exception as e:
+        print("Error while starting the app:", e)# --- Webhook Route ---
 @app.route(f"/{TELEGRAM_TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), tg_app.bot)
